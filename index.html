@@ -1,200 +1,149 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>torukagi - ULTIMATE JACKPOT MODE</title>
-<style>
-body { margin:0; overflow:hidden; background:#000511; font-family:Consolas, monospace; color:white; touch-action:manipulation; }
-.bg-container {
-    position:fixed; top:-10%; left:-10%; width:120%; height:120%;
-    background:#000511 url('sky.png') no-repeat center center;
-    background-size:cover; z-index:-1; transition:transform .1s ease-out, filter .2s;
-}
-#flash { position:fixed; inset:0; background:white; opacity:0; pointer-events:none; z-index:50; }
-canvas { position:fixed; inset:0; z-index:10; pointer-events:none; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Menu</title>
+    <style>
+        /* 全体のスタイル設定 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        }
 
-.ui { position:fixed; bottom:20px; left:20px; z-index:100; }
-.btn { cursor:pointer; padding:12px 18px; border:1px solid white; background:rgba(0,0,0,.6); border-radius:8px; font-size:14px; }
-#clock { font-size:22px; font-weight:bold; text-shadow:0 0 10px #00f2ff; margin-top:8px; }
+        body {
+            background-color: #ffffff;
+        }
 
-.jackpot, .logo, .slot {
-    position:fixed; inset:0; display:flex; justify-content:center; align-items:center;
-    pointer-events:none; z-index:60; opacity:0;
-}
+        /* ヘッダー全体のレイアウト */
+        header {
+            padding: 20px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
 
-.jackpot { font-size:min(18vw,120px); color:gold; text-shadow:0 0 20px red,0 0 40px yellow,0 0 80px white; }
-.logo { font-size:min(12vw,80px); color:#00f2ff; text-shadow:0 0 20px #00f2ff,0 0 40px white; }
+        /* ロゴ部分 */
+        .logo {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
 
-.slot span {
-    font-size:min(20vw,140px);
-    margin:0 10px;
-    color:white;
-    text-shadow:0 0 15px cyan,0 0 30px blue;
-}
+        /* 三本線アイコンのデザイン */
+        .menu-btn {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 20px;
+            z-index: 100;
+        }
 
-@keyframes shake { 0%{transform:translate(0,0)}25%{transform:translate(-8px,5px)}50%{transform:translate(8px,-5px)}75%{transform:translate(-5px,8px)}100%{transform:translate(0,0)} }
-.shake { animation:shake .3s linear infinite; }
-</style>
+        .menu-btn span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: #333;
+            border-radius: 10px;
+        }
+
+        /* チェックボックス（非表示） */
+        #menu-check {
+            display: none;
+        }
+
+        /* メニューが表示されるエリア */
+        .nav-content {
+            position: absolute;
+            top: 100%; /* ヘッダーのすぐ下に配置 */
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            display: none; /* 初期は隠す */
+            padding: 20px 40px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            z-index: 50;
+        }
+
+        .nav-content ul {
+            list-style: none;
+        }
+
+        .nav-content ul li {
+            margin-bottom: 25px;
+        }
+
+        /* リンクの文字デザイン */
+        .nav-content a {
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+            transition: 0.3s;
+        }
+
+        /* 項目ごとの色設定 */
+        .link-home { color: #5b56e0; }    /* 青紫色（アクティブ） */
+        .link-sub { color: #8e8e93; }     /* グレー */
+
+        /* チェックボックスがONの時にメニューを表示 */
+        #menu-check:checked ~ .nav-content {
+            display: block;
+        }
+
+        /* デスクトップで見るとき用の調整（任意） */
+        @media (min-width: 768px) {
+            .nav-content {
+                position: static;
+                display: block;
+                width: auto;
+                box-shadow: none;
+                padding: 0;
+            }
+            .nav-content ul {
+                display: flex;
+                gap: 30px;
+            }
+            .nav-content ul li {
+                margin-bottom: 0;
+            }
+            .menu-btn {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="bg-container" id="bg"></div>
-<div id="flash"></div>
-<canvas id="cvs"></canvas>
+    <header>
+        <div class="logo">
+            <span style="color:#333; transform: rotate(-15deg);">▷</span>
+            <span style="color:#50e3c2; font-size: 0.6em; margin-left: -5px;">✦</span>
+        </div>
 
-<div class="jackpot" id="jackpot">大当たり</div>
-<div class="logo" id="logo">TORUKAGI ZONE</div>
-<div class="slot" id="slot"><span>7</span><span>7</span><span>7</span></div>
+        <input type="checkbox" id="menu-check">
+        <label for="menu-check" class="menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </label>
 
-<div class="ui">
-    <div id="mute-btn" class="btn">🔊 TAP TO START SOUND</div>
-    <div id="clock"></div>
-</div>
+        <nav class="nav-content">
+            <ul>
+                <li><a href="#" class="link-home">ホーム</a></li>
+                <li><a href="https://twitter.com" target="_blank" class="link-sub">Twitter</a></li>
+                <li><a href="https://youtube.com" target="_blank" class="link-sub">YouTube</a></li>
+            </ul>
+        </nav>
+    </header>
 
-<script>
-const bg = document.getElementById('bg');
-const flash = document.getElementById('flash');
-const cvs = document.getElementById('cvs');
-const ctx = cvs.getContext('2d');
-const clockEl = document.getElementById('clock');
-const muteBtn = document.getElementById('mute-btn');
-const jackpot = document.getElementById('jackpot');
-const logo = document.getElementById('logo');
-const slot = document.getElementById('slot');
-
-let w,h,particles=[],lasers=[],isMuted=false,started=false,hyper=false;
-
-const hype = new Audio('hype.mp3');
-hype.loop = true;
-hype.volume = 0.8;
-
-function resize(){ w=cvs.width=innerWidth; h=cvs.height=innerHeight; }
-addEventListener('resize', resize); resize();
-
-function updateClock(){ clockEl.textContent = new Date().toLocaleTimeString('ja-JP',{hour12:false}); }
-setInterval(updateClock,1000); updateClock();
-
-function startAudio(){
-    if(started) return;
-    started=true;
-    hype.play().catch(()=>{});
-    muteBtn.textContent="🔊 SOUND ON";
-}
-muteBtn.onclick=()=>{
-    startAudio();
-    isMuted=!isMuted;
-    hype.volume=isMuted?0:0.8;
-    muteBtn.textContent=isMuted?"🔇 SOUND OFF":"🔊 SOUND ON";
-};
-document.addEventListener("pointerdown", startAudio, {once:true});
-
-class Particle{
-    constructor(){this.init();}
-    init(){
-        this.x=Math.random()*w; this.y=Math.random()*h;
-        this.vx=(Math.random()-0.5)*(hyper?16:10);
-        this.vy=(Math.random()-0.5)*(hyper?16:10);
-        this.life=Math.random()*50+30;
-        this.size=Math.random()*4+1;
-        this.hue=Math.random()*360;
-    }
-    update(){ this.x+=this.vx; this.y+=this.vy; if(--this.life<=0) this.init(); }
-    draw(){
-        ctx.beginPath();
-        ctx.fillStyle=`hsla(${this.hue},100%,60%,.9)`;
-        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-        ctx.fill();
-    }
-}
-
-class Laser{
-    constructor(){this.init();}
-    init(){
-        this.x=Math.random()*w;
-        this.y=Math.random()*h*0.6;
-        this.len=Math.random()*200+80;
-        this.speed=Math.random()*(hyper?40:25)+20;
-        this.hue=Math.random()*360;
-    }
-    update(){ this.x-=this.speed; this.y+=this.speed*0.5; if(this.x<-200||this.y>h+200) this.init(); }
-    draw(){
-        const g=ctx.createLinearGradient(this.x,this.y,this.x+this.len,this.y-this.len*0.4);
-        g.addColorStop(0,`hsla(${this.hue},100%,70%,1)`);
-        g.addColorStop(1,"rgba(255,255,255,0)");
-        ctx.strokeStyle=g; ctx.lineWidth=4;
-        ctx.beginPath(); ctx.moveTo(this.x,this.y);
-        ctx.lineTo(this.x+this.len,this.y-this.len*0.4);
-        ctx.stroke();
-    }
-}
-
-for(let i=0;i<400;i++) particles.push(new Particle());
-for(let i=0;i<6;i++) lasers.push(new Laser());
-
-function flashBurst(times=6){
-    for(let i=0;i<times;i++){
-        setTimeout(()=>{
-            flash.style.background=`hsl(${Math.random()*360},100%,70%)`;
-            flash.style.opacity=0.9;
-            setTimeout(()=>flash.style.opacity=0,80);
-        },i*120);
-    }
-}
-
-function triggerJackpot(){
-    jackpot.style.opacity=1;
-    jackpot.style.transform="scale(1.2)";
-    document.body.classList.add("shake");
-    flashBurst(8);
-    setTimeout(()=>{
-        jackpot.style.opacity=0;
-        jackpot.style.transform="scale(0.5)";
-        document.body.classList.remove("shake");
-    },1200);
-}
-
-function triggerLogo(){
-    logo.style.opacity=1;
-    flashBurst(5);
-    setTimeout(()=>logo.style.opacity=0,1000);
-}
-
-function triggerHyper(){
-    hyper=true;
-    triggerLogo();
-    setTimeout(()=>hyper=false,6000);
-}
-
-function triggerSlot(){
-    slot.style.opacity=1;
-    flashBurst(10);
-    setTimeout(()=>slot.style.opacity=0,1200);
-}
-
-function animate(){
-    ctx.clearRect(0,0,w,h);
-    particles.forEach(p=>{p.update();p.draw();});
-    lasers.forEach(l=>{l.update();l.draw();});
-
-    if(Math.random()>0.994) triggerJackpot();
-    if(Math.random()>0.997) triggerLogo();
-
-    const pulse=Math.sin(Date.now()*0.006)*(hyper?10:6);
-    bg.style.filter=`brightness(${1+pulse*0.03}) saturate(${hyper?2.5:1.8})`;
-
-    requestAnimationFrame(animate);
-}
-animate();
-
-document.addEventListener('pointermove',e=>{
-    const x=(w/2-e.clientX)/25;
-    const y=(h/2-e.clientY)/25;
-    bg.style.transform=`translate(${x}px,${y}px)`;
-});
-
-document.addEventListener('dblclick', triggerHyper);
-document.addEventListener('contextmenu', e=>{ e.preventDefault(); triggerSlot(); });
-</script>
 </body>
 </html>
