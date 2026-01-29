@@ -184,6 +184,19 @@
         }
         animate();
 
+const startAudio = () => {
+    if (!isMuted) {
+        sounds[wType].play().catch(e => console.log("Autoplay blocked:", e));
+    }
+
+    document.removeEventListener('click', startAudio);
+    document.removeEventListener('touchstart', startAudio);
+};
+
+document.addEventListener('click', startAudio);
+document.addEventListener('touchstart', startAudio);
+
+
         document.addEventListener('mousemove', (e) => {
             const x = (w / 2 - e.clientX) / 30;
             const y = (h / 2 - e.clientY) / 30;
@@ -192,3 +205,4 @@
     </script>
 </body>
 </html>
+
