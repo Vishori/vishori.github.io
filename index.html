@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: #f9f9f9;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 上部の丸いバー */
+        header {
+            width: 90%;
+            max-width: 1200px;
+            height: 80px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            border-radius: 100px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .logo img {
+            height: 45px;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* メニューボタン */
+        .menu-btn {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            z-index: 1001;
+        }
+        .menu-btn span {
+            width: 30px;
+            height: 3px;
+            background-color: #333;
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+
+        #menu-check { display: none; }
+
+        /* メニュー内容 */
+        .nav-content {
+            position: fixed;
+            top: 115px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 500px;
+            max-height: 0;
+            background-color: rgba(255, 255, 255, 0.98);
+            overflow: hidden;
+            transition: max-height 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 999;
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .nav-content ul { list-style: none; padding: 40px; text-align: center; }
+        .nav-content ul li { padding: 15px 0; opacity: 0; transform: translateY(15px); transition: 0.6s ease; }
+        .nav-content a { text-decoration: none; font-size: 28px; font-weight: bold; }
+        .link-home { color: #5b56e0; }
+        .link-sub { color: #8e8e93; }
+
+        #menu-check:checked ~ .nav-content { max-height: 500px; }
+        #menu-check:checked ~ .nav-content ul li { opacity: 1; transform: translateY(0); }
+
+        /* ポップコーン */
+        .popcorn {
+            position: fixed;
+            top: -50px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg) scale(0.5); opacity: 0; }
+            10% { opacity: 1; transform: translateY(-20px) rotate(45deg) scale(1.2); }
+            100% { transform: translateY(110vh) rotate(720deg) scale(1); opacity: 0.7; }
+        }
+
+        /* ビデオレイヤー */
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            cursor: pointer;
+        }
+        video { max-width: 100%; max-height: 100%; pointer-events: none; }
+
+        @media (max-width: 600px) {
+            header { height: 60px; padding: 0 20px; top: 10px; }
+            .logo img { height: 35px; }
+            .nav-content { top: 85px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" id="logo-btn">
+            <img src="logo.png" alt="Logo" id="logo-img">
+        </div>
+        <input type="checkbox" id="menu-check">
+        <label for="menu-check" class="menu-btn">
+            <span></span><span></span><span></span>
+        </label>
+        <nav class="nav-content">
+            <ul>
+                <li><a href="#" class="link-home">ホーム</a></li>
+                <li><a href="https://x.com/bakakagi" target="_blank" class="link-sub">Twitter</a></li>
+                <li><a href="https://youtube.com/@ayato-torukagi9w" target="_blank" class="link-sub">YouTube</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div id="video-container">
+        <video id="virus-video" src="koyuki_virus.mp4" preload="auto"></video>
+    </div>
+
+    <script>
+        const logoBtn = document.getElementById('logo-btn');
+        const logoImg = document.getElementById('logo-img');
+        const videoContainer = document.getElementById('video-container');
+        const video = document.getElementById('virus-video');
+        
+        let currentRotation = 0;
+        let clickCount = 0;
+        let resetTimer;
+
+        logoBtn.addEventListener('click', () => {
+            currentRotation += 360;
+            logoImg.style.transform = `rotate(${currentRotation}deg)`;
+
+            clickCount++;
+            clearTimeout(resetTimer);
+            resetTimer = setTimeout(() => { clickCount = 0; }, 2000);
+
+            if (clickCount === 3) {
+                videoContainer.style.display = 'flex';
+                video.currentTime = 0;
+                video.play().catch(() => {});
+                clickCount = 0;
+            }
+        });
+
+        video.onended = stopAndPop;
+
+        videoContainer.addEventListener('click', () => {
+            if (videoContainer.style.display === 'flex') {
+                stopAndPop();
+            }
+        });
+
+        function stopAndPop() {
+            video.pause();
+            videoContainer.style.display = 'none';
+            spawnPopcorn();
+        }
+
+        function spawnPopcorn() {
+            const count = 40;
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('img');
+                    p.src = 'logo.png';
+                    p.classList.add('popcorn');
+                    p.style.left = Math.random() * window.innerWidth + 'px';
+                    p.style.width = (30 + Math.random() * 40) + 'px';
+                    p.style.animationDuration = (2 + Math.random() * 2) + 's';
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 4000);
+                }, i * 40);
+            }
+        }
+    </script>
+</body>
+</html>
+
