@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index - Advanced Slim Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: #f9f9f9;
+            min-height: 200vh; /* スクロールを確認するために高さを確保 */
+            overflow-x: hidden;
+            padding-top: 110px;
+        }
+
+        /* 2. スクロールで変化するヘッダー */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 50px;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            transition: all 0.4s ease; /* アニメーション用 */
+        }
+
+        /* スクロール時のクラス（JSで制御） */
+        header.scrolled {
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        /* 1. ロゴのホバーエフェクト */
+        .logo {
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s ease;
+        }
+        .logo:hover {
+            transform: scale(1.1); /* 少し大きく */
+        }
+        .logo img {
+            height: 60px;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s ease;
+            filter: drop-shadow(0 0 0 rgba(0,0,0,0));
+        }
+        .logo:hover img {
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); /* 浮き上がる影 */
+        }
+        header.scrolled .logo img {
+            height: 45px; /* スクロール時にロゴも少し小さく */
+        }
+
+        .menu-btn { cursor: pointer; display: flex; flex-direction: column; gap: 8px; z-index: 1001; }
+        .menu-btn span { width: 40px; height: 4px; background-color: #333; border-radius: 2px; transition: all 0.3s; }
+
+        #menu-check { display: none; }
+
+        /* スリムメニュー */
+        .nav-content {
+            position: fixed;
+            top: 110px;
+            right: 20px;
+            width: 240px;
+            max-height: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s, top 0.4s;
+            opacity: 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+        header.scrolled + .nav-content {
+            top: 80px; /* ヘッダーが縮んだらメニュー位置も上げる */
+        }
+
+        .nav-content ul { list-style: none; padding: 20px 0; text-align: center; }
+        .nav-content a { 
+            text-decoration: none; font-size: 18px; font-weight: bold; color: #333; 
+            display: block; padding: 12px 0; transition: all 0.2s;
+        }
+        .nav-content a:hover { background-color: rgba(91, 86, 224, 0.1); color: #5b56e0; }
+
+        /* 3. メニュー内カウンター */
+        .menu-counter-wrap {
+            padding: 15px 0;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            margin-top: 5px;
+        }
+        .menu-counter-wrap img {
+            height: 35px;
+            image-rendering: pixelated;
+        }
+
+        #menu-check:checked ~ .nav-content { max-height: 500px; opacity: 1; }
+
+        /* ビデオコンテナ */
+        #video-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10000; cursor: pointer; backdrop-filter: blur(5px);
+        }
+        .video-wrapper {
+            width: 85%; max-width: 800px; background: #000;
+            border-radius: 30px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        video { width: 100%; display: block; pointer-events: none; }
+        .video-exit-hint { color: white; margin-top: 20px; font-size: 16px; opacity: 0.7; }
+
+        /* ポップコーン */
+        .popcorn { position: fixed; top: -100px; pointer-events: none; z-index: 9999; animation: fall linear forwards; }
+        @keyframes fall { 
+            0% { transform: translateY(0) rotate(0deg) scale(0.5); opacity: 0; } 
+            10% { opacity: 1; transform: translateY(-20px) rotate(45deg) scale(1.2); } 
+            100% { transform: translateY(110vh) rotate(720deg) scale(1); opacity: 0.7; } 
+        }
+
+        @media (max-width: 600px) {
+            header { height: 70px; padding: 0 20px; }
+            header.scrolled { height: 60px; }
+            .logo img { height: 40px; }
+            .nav-content { width: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header id="main-header">
+        <div class="logo" id="logo-btn">
+            <img src="logo.png" alt="Logo" id="logo-img">
+        </div>
+        <input type="checkbox" id="menu-check">
+        <label for="menu-check" class="menu-btn">
+            <span></span><span></span><span></span>
+        </label>
+        
+        <nav class="nav-content">
+            <ul>
+                <li><a href="#" style="color: #5b56e0;">HOME</a></li>
+                <li><a href="https://twitter.com" target="_blank">Twitter</a></li>
+                <li><a href="https://youtube.com" target="_blank">YouTube</a></li>
+                <li class="menu-counter-wrap">
+                    <img src="https://count.getloli.com/get/@vishori?name=vishori&theme=asoul&padding=7&offset=0&align=top&scale=2&pixelated=1&darkmode=auto" alt="Counter">
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <div id="video-container">
+        <div class="video-wrapper">
+            <video id="virus-video" src="koyuki_virus.mp4" preload="auto"></video>
+        </div>
+        <div class="video-exit-hint">タップで再生を終了</div>
+    </div>
+
+    <script>
+        const header = document.getElementById('main-header');
+        const logoBtn = document.getElementById('logo-btn');
+        const logoImg = document.getElementById('logo-img');
+        const videoContainer = document.getElementById('video-container');
+        const video = document.getElementById('virus-video');
+        
+        // 2. スクロール検知
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // ロゴギミック
+        let currentRotation = 0;
+        let clickCount = 0;
+        let resetTimer;
+
+        logoBtn.addEventListener('click', () => {
+            currentRotation += 360;
+            logoImg.style.transform = `rotate(${currentRotation}deg)`;
+            clickCount++;
+            clearTimeout(resetTimer);
+            resetTimer = setTimeout(() => { clickCount = 0; }, 2000);
+
+            if (clickCount === 3) {
+                videoContainer.style.display = 'flex';
+                video.currentTime = 0;
+                video.play().catch(() => {});
+                clickCount = 0;
+            }
+        });
+
+        video.onended = stopAndPop;
+        videoContainer.addEventListener('click', stopAndPop);
+
+        function stopAndPop() {
+            if (videoContainer.style.display === 'flex') {
+                video.pause();
+                videoContainer.style.display = 'none';
+                spawnPopcorn();
+            }
+        }
+
+        function spawnPopcorn() {
+            for (let i = 0; i < 40; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('img');
+                    p.src = 'logo.png';
+                    p.classList.add('popcorn');
+                    p.style.left = Math.random() * window.innerWidth + 'px';
+                    p.style.width = (40 + Math.random() * 40) + 'px';
+                    p.style.animationDuration = (2 + Math.random() * 2) + 's';
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 4000);
+                }, i * 40);
+            }
+        }
+    </script>
+</body>
+</html>
